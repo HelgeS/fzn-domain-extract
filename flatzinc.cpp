@@ -40,6 +40,7 @@
 
 #include <vector>
 #include <string>
+#include <boost/lexical_cast.hpp>
 using namespace std;
 
 namespace FlatZinc {
@@ -54,12 +55,15 @@ namespace FlatZinc {
     iv = std::vector<IntVar>(intVars);
     iv_introduced = std::vector<bool>(intVars);
     iv_boolalias = std::vector<int>(intVars);
+    iv_domains = std::vector<string>(intVars);
     boolVarCount = 0;
     bv = std::vector<BoolVar>(boolVars);
     bv_introduced = std::vector<bool>(boolVars);
+    bv_domains = std::vector<string>(boolVars);
     setVarCount = 0;
     sv = std::vector<SetVar>(setVars);
     sv_introduced = std::vector<bool>(setVars);
+    sv_domains = std::vector<string>(setVars);
   }
 
   void
@@ -68,11 +72,31 @@ namespace FlatZinc {
       iv[intVarCount++] = iv[vs->i];
     } else {
       std::cerr << "create new IntVar " << intVarCount << "\n";
-      /// TODO: create actual integer variable from vs
       iv[intVarCount++] = IntVar();
     }
     iv_introduced[intVarCount-1] = vs->introduced;
     iv_boolalias[intVarCount-1] = -1;
+
+    string d;
+    if (vs->assigned) {
+      d = boost::lexical_cast<std::string>(vs->i);
+    }	else if (vs->domain()) {
+      AST::SetLit* sl = vs->domain.some();
+      if (sl->interval) {
+        d = "{";
+        d += boost::lexical_cast<std::string>(sl->min);
+        d += "..";
+        d += boost::lexical_cast<std::string>(sl->max);
+        d += "}";
+      }	else {
+        d = "{";
+        for (unsigned int i=0; i<sl->s.size(); i++) {
+          d += boost::lexical_cast<std::string>(sl->s[i]);
+          d += (i < sl->s.size()-1 ? ", " : "}");
+        }
+      }
+    }
+    iv_domains[intVarCount-1] = d;
   }
 
   void
@@ -90,10 +114,30 @@ namespace FlatZinc {
       bv[boolVarCount++] = bv[vs->i];
     } else {
       std::cerr << "create new BoolVar " << boolVarCount << "\n";
-      /// TODO: create actual Boolean variable from vs
       bv[boolVarCount++] = BoolVar();
     }
     bv_introduced[boolVarCount-1] = vs->introduced;
+
+    string d;
+    if (vs->assigned) {
+      d = boost::lexical_cast<std::string>(vs->i);
+    }	else if (vs->domain()) {
+      AST::SetLit* sl = vs->domain.some();
+      if (sl->interval) {
+        d = "{";
+        d += boost::lexical_cast<std::string>(sl->min);
+        d += "..";
+        d += boost::lexical_cast<std::string>(sl->max);
+        d += "}";
+      }	else {
+        d = "{";
+        for (unsigned int i=0; i<sl->s.size(); i++) {
+          d += boost::lexical_cast<std::string>(sl->s[i]);
+          d += (i < sl->s.size()-1 ? ", " : "}");
+        }
+      }
+    }
+    bv_domains[boolVarCount-1] = d;
   }
 
   void
@@ -233,6 +277,8 @@ namespace FlatZinc {
 
   void
   FlatZincModel::run(std::ostream& out, const Printer& p) {
+
+
     switch (_method) {
     case MIN:
     case MAX:
@@ -273,11 +319,13 @@ namespace FlatZinc {
     if (ai->isInt(k)) {
       out << k;
     } else if (ai->isIntVar()) {
-      // TODO: output actual variable
-      out << ai->getIntVar();
+      //out << ai->getIntVar();
+      string d = m.iv_domains[ai->getIntVar()];
+      out << d;
     } else if (ai->isBoolVar()) {
-      // TODO: output actual variable
-      out << ai->getBoolVar();
+      //out << ai->getBoolVar();
+      string d = m.bv_domains[ai->getBoolVar()];
+      out << d;
     } else if (ai->isSetVar()) {
       // TODO: output actual variable
       out << ai->getSetVar();

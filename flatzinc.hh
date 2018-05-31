@@ -41,6 +41,7 @@
 #include <iostream>
 #include <map>
 #include <cassert>
+#include <string>
 
 #include "conexpr.hh"
 #include "ast.hh"
@@ -106,6 +107,11 @@ namespace FlatZinc {
     std::vector<SetVar> sv;
     /// Indicates whether a set variable is introduced by mzn2fzn
     std::vector<bool> sv_introduced;
+
+    // Keep also varspecs of variables as those include the domains
+    std::vector<std::string> iv_domains;
+    std::vector<std::string> bv_domains;
+    std::vector<std::string> sv_domains;
 
     /// Construct empty space
     FlatZincModel(void);

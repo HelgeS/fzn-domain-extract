@@ -60,8 +60,9 @@ int main(int argc, char** argv) {
   }
 
   if (fg) {
-    fg->createBranchers(fg->solveAnnotations(), false, std::cerr);
-    fg->run(std::cout, p);
+    //fg->createBranchers(fg->solveAnnotations(), false, std::cerr);
+    //fg->run(std::cout, p);
+    fg->print(std::cout, p);
   } else {
     exit(EXIT_FAILURE);    
   }
