@@ -1304,13 +1304,6 @@ int yydebug;
 # define YYMAXDEPTH 10000
 #endif
 
-/* YYLEX -- calling `yylex' with the right arguments.  */
-
-#ifdef YYLEX_PARAM
-# define YYLEX yylex (&yylval, YYLEX_PARAM)
-#else
-# define YYLEX yylex (&yylval)
-#endif
 
 #if YYERROR_VERBOSE
 
@@ -1709,6 +1702,14 @@ YYSTYPE yylval YY_INITIAL_VALUE (= yyval_default);
     YYACCEPT;
 
   goto yybackup;
+
+/* YYLEX -- calling `yylex' with the right arguments.  */
+
+#ifdef YYLEX_PARAM
+# define YYLEX yylex (&yylval, YYLEX_PARAM)
+#else
+# define YYLEX yylex (&yylval)
+#endif
 
 /*-----------.
 | yybackup.  |
