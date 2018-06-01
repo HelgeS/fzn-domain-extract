@@ -1,7 +1,8 @@
 HEADERS=ast.hh conexpr.hh flatzinc.hh option.hh parser.hh parser.tab.hh registry.hh symboltable.hh varspec.hh
 SOURCES=flatzinc.cpp fz.cpp lexer.yy.cpp parser.tab.cpp registry.cpp
 
-CXXFLAGS=-O2 -g -std=gnu++98
+CXX=g++-5
+CXXFLAGS=-O2 -g -std=gnu++11
 
 all: fz
 
