@@ -71,7 +71,6 @@ namespace FlatZinc {
     if (vs->alias) {
       iv[intVarCount++] = iv[vs->i];
     } else {
-      std::cerr << "create new IntVar " << intVarCount << "\n";
       iv[intVarCount++] = IntVar();
     }
     iv_introduced[intVarCount-1] = vs->introduced;
@@ -92,7 +91,7 @@ namespace FlatZinc {
         d = "{";
         for (unsigned int i=0; i<sl->s.size(); i++) {
           d += boost::lexical_cast<std::string>(sl->s[i]);
-          d += (i < sl->s.size()-1 ? ", " : "}");
+          d += (i < sl->s.size()-1 ? "," : "}");
         }
       }
     }
@@ -113,7 +112,6 @@ namespace FlatZinc {
     if (vs->alias) {
       bv[boolVarCount++] = bv[vs->i];
     } else {
-      std::cerr << "create new BoolVar " << boolVarCount << "\n";
       bv[boolVarCount++] = BoolVar();
     }
     bv_introduced[boolVarCount-1] = vs->introduced;
@@ -133,7 +131,7 @@ namespace FlatZinc {
         d = "{";
         for (unsigned int i=0; i<sl->s.size(); i++) {
           d += boost::lexical_cast<std::string>(sl->s[i]);
-          d += (i < sl->s.size()-1 ? ", " : "}");
+          d += (i < sl->s.size()-1 ? "," : "}");
         }
       }
     }
@@ -145,20 +143,19 @@ namespace FlatZinc {
     if (vs->alias) {
       sv[setVarCount++] = sv[vs->i];
     } else {
-      std::cerr << "create new SetVar " << setVarCount << "\n";
-      /// TODO: create actual set variable from vs
       sv[setVarCount++] = SetVar();
     }
     sv_introduced[setVarCount-1] = vs->introduced;
+    /// TODO: create actual set variable domain from vs
   }
 
   void
   FlatZincModel::postConstraint(const ConExpr& ce, AST::Node* ann) {
-    try {
+    /*try {
       registry().post(*this, ce, ann);
     } catch (AST::TypeError& e) {
       throw FlatZinc::Error("Type error", e.what());
-    }
+      }*/
   }
 
   void flattenAnnotations(AST::Array* ann, std::vector<AST::Node*>& out) {
@@ -178,50 +175,6 @@ namespace FlatZinc {
   void
   FlatZincModel::createBranchers(AST::Node* ann, bool ignoreUnknown,
                                  std::ostream& err) {
-    if (ann) {
-      std::vector<AST::Node*> flatAnn;
-      if (ann->isArray()) {
-        flattenAnnotations(ann->getArray()  , flatAnn);
-      } else {
-        flatAnn.push_back(ann);
-      }
-
-      for (unsigned int i=0; i<flatAnn.size(); i++) {
-        try {
-          AST::Call *call = flatAnn[i]->getCall("int_search");
-          AST::Array *args = call->getArgs(4);
-          AST::Array *vars = args->a[0]->getArray();
-          std::cerr << "int_search\n";
-          // TODO: install search
-        } catch (AST::TypeError& e) {
-          (void) e;
-          try {
-            AST::Call *call = flatAnn[i]->getCall("bool_search");
-            AST::Array *args = call->getArgs(4);
-            AST::Array *vars = args->a[0]->getArray();
-            std::cerr << "bool_search\n";
-            // TODO: install search
-          } catch (AST::TypeError& e) {
-            (void) e;
-            try {
-              AST::Call *call = flatAnn[i]->getCall("set_search");
-              AST::Array *args = call->getArgs(4);
-              AST::Array *vars = args->a[0]->getArray();
-              std::cerr << "set_search\n";
-              // TODO: install search
-            } catch (AST::TypeError& e) {
-              (void) e;
-              if (!ignoreUnknown) {
-                err << "Warning, ignored search annotation: ";
-                flatAnn[i]->print(err);
-                err << std::endl;
-              }
-            }
-          }
-        }
-      }
-    }
-    // TODO: install search for all remaining variables
   }
 
   AST::Array*
@@ -277,19 +230,6 @@ namespace FlatZinc {
 
   void
   FlatZincModel::run(std::ostream& out, const Printer& p) {
-
-
-    switch (_method) {
-    case MIN:
-    case MAX:
-      std::cerr << "start optimization search\n";
-      // TODO: perform actual search
-      break;
-    case SAT:
-      std::cerr << "start satisfiability search\n";      
-      // TODO: perform actual search
-      break;
-    }
   }
 
   FlatZincModel::Meth
@@ -319,11 +259,9 @@ namespace FlatZinc {
     if (ai->isInt(k)) {
       out << k;
     } else if (ai->isIntVar()) {
-      //out << ai->getIntVar();
       string d = m.iv_domains[ai->getIntVar()];
       out << d;
     } else if (ai->isBoolVar()) {
-      //out << ai->getBoolVar();
       string d = m.bv_domains[ai->getBoolVar()];
       out << d;
     } else if (ai->isSetVar()) {
@@ -338,7 +276,7 @@ namespace FlatZinc {
       } else {
         out << "{";
         for (unsigned int i=0; i<s->s.size(); i++) {
-          out << s->s[i] << (i < s->s.size()-1 ? ", " : "}");
+          out << s->s[i] << (i < s->s.size()-1 ? "," : "}");
         }
       }
     } else if (ai->isString()) {
@@ -363,22 +301,29 @@ namespace FlatZinc {
   Printer::print(std::ostream& out, const FlatZincModel& m) const {
     if (_output == NULL)
       return;
+    bool isFirst = 1;
     for (unsigned int i=0; i< _output->a.size(); i++) {
       AST::Node* ai = _output->a[i];
       if (ai->isArray()) {
         AST::Array* aia = ai->getArray();
         int size = aia->a.size();
-        out << "[";
         for (int j=0; j<size; j++) {
+          if (!isFirst) {
+            out << "|";
+          } else {
+            isFirst = 0;
+          }
+
           printElem(out,aia->a[j],m);
-          if (j<size-1)
-            out << ", ";
         }
-        out << "]";
-      } else {
+      } else if (ai->isIntVar() || ai->isBoolVar() || ai->isSetVar()){
+        if (!isFirst) {
+          out << "|";
+        }
         printElem(out,ai,m);
       }
     }
+    out << endl;
   }
 
   Printer::~Printer(void) {

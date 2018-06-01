@@ -48,11 +48,11 @@ int main(int argc, char** argv) {
     cerr << "Usage: " << argv[0] << " <file>" << endl;
     exit(EXIT_FAILURE);
   }
-  
+
   const char* filename = argv[1];
-  
   FlatZinc::Printer p;
   FlatZinc::FlatZincModel* fg = NULL;
+
   if (!strcmp(filename, "-")) {
     fg = FlatZinc::parse(cin, p);
   } else {

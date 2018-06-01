@@ -220,24 +220,6 @@ AST::Node* arrayOutput(AST::Call* ann) {
   }
   
   std::ostringstream oss;
-  
-  oss << "array" << a->a.size() << "d(";
-  for (unsigned int i=0; i<a->a.size(); i++) {
-    AST::SetLit* s = a->a[i]->getSet();
-    if (s->empty())
-      oss << "{}, ";
-    else if (s->interval)
-      oss << s->min << ".." << s->max << ", ";
-    else {
-      oss << "{";
-      for (unsigned int j=0; j<s->s.size(); j++) {
-        oss << s->s[j];
-        if (j<s->s.size()-1)
-          oss << ",";
-      }
-      oss << "}, ";
-    }
-  }
 
   if (!ann->args->isArray()) {
     a->a[0] = NULL;

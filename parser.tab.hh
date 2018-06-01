@@ -98,7 +98,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 330 "parser.yxx" /* yacc.c:1909  */
+#line 312 "parser.yxx" /* yacc.c:1909  */
  int iValue; char* sValue; bool bValue; double dValue;
          std::vector<int>* setValue;
          FlatZinc::AST::SetLit* setLit;
