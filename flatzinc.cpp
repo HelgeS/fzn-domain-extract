@@ -319,7 +319,10 @@ namespace FlatZinc {
       } else if (ai->isIntVar() || ai->isBoolVar() || ai->isSetVar()){
         if (!isFirst) {
           out << "|";
+        } else {
+          isFirst = 0;
         }
+
         printElem(out,ai,m);
       }
     }
